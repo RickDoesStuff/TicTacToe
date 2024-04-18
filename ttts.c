@@ -2,7 +2,6 @@
 #define _POSIX_C_SOURCE 200809L
 #include "ttts.h"
 #include "network.h"
-#include "connection.h"
 #include "queue.h"
 
 #define QUEUE_SIZE 8
@@ -89,10 +88,10 @@ int main(int argc, char **argv)
     char *service = argc == 2 ? argv[1] : "15000";
     install_handlers(&mask);
 
-    queue_t queue;
-    if (q_init(&queue, 10) == -1) {
-        return -1;
-    }
+    // queue_t queue;
+    // if (q_init(&queue, 10) == -1) {
+    //     return -1;
+    // }
 
     int listener = open_listener(service, QUEUE_SIZE);
     if (listener < 0) exit(EXIT_FAILURE);
@@ -110,28 +109,6 @@ int main(int argc, char **argv)
             free(con);
             continue;
         }
-
-        printf("Waiting in the queue for a second connection\n");
-
-        q_enqueue(&queue, con);
-
-        printf("en queued\n");
-
-        // Handle the connections when there are exactly two
-        
-        printf("queue locked\n");
-        pthread_mutex_lock(&queue.lock);
-        if (queue.length >= MAX_CONNECTIONS) {
-            printf("**length >= max connections\n");
-
-
-            ConnectionData *con1, *con2;
-            printf("dequeuing 1\n");
-            q_dequeue(&queue, &con1);
-            printf("dequeuing 2\n");
-            q_dequeue(&queue, &con2);
-            printf("all dequeued\n");
-
             // Signal handling should be done here before the threads start
             int error = pthread_sigmask(SIG_BLOCK, &mask, NULL);
             if (error != 0) {
@@ -140,22 +117,61 @@ int main(int argc, char **argv)
             }
 
             printf("before creating\n");
-            error = pthread_create(&tid, NULL, read_data, con1);        
+            ConnectionData *con;
+            error = pthread_create(&tid, NULL, read_data, con);        
             if (error != 0) {
                 fprintf(stderr, "sigmask: %s\n", strerror(error));
                 exit(EXIT_FAILURE);
             }
             pthread_detach(tid);
-            pthread_create(&tid, NULL, read_data, con2);        
-            if (error != 0) {
-        	    fprintf(stderr, "sigmask: %s\n", strerror(error));
-        	    exit(EXIT_FAILURE);
-            }
-            pthread_detach(tid);
-            printf("**threads made and detached\n");
-        }
-        pthread_mutex_unlock(&queue.lock);
-        printf("queue unlocked\n");
+
+            printf("**thread made and detached\n");
+
+        //printf("Waiting in the queue for a second connection\n");
+
+        //q_enqueue(&queue, con);
+
+        //printf("en queued\n");
+
+        // Handle the connections when there are exactly two
+        
+        // printf("queue locked\n");
+        // pthread_mutex_lock(&queue.lock);
+        // if (queue.length >= MAX_CONNECTIONS) {
+        //     printf("**length >= max connections\n");
+
+
+        //     ConnectionData *con1, *con2;
+        //     printf("dequeuing 1\n");
+        //     q_dequeue(&queue, &con1);
+        //     printf("dequeuing 2\n");
+        //     q_dequeue(&queue, &con2);
+        //     printf("all dequeued\n");
+
+        //     // Signal handling should be done here before the threads start
+        //     int error = pthread_sigmask(SIG_BLOCK, &mask, NULL);
+        //     if (error != 0) {
+        //         fprintf(stderr, "sigmask: %s\n", strerror(error));
+        //         exit(EXIT_FAILURE);
+        //     }
+
+        //     printf("before creating\n");
+        //     error = pthread_create(&tid, NULL, read_data, con1);        
+        //     if (error != 0) {
+        //         fprintf(stderr, "sigmask: %s\n", strerror(error));
+        //         exit(EXIT_FAILURE);
+        //     }
+        //     pthread_detach(tid);
+        //     pthread_create(&tid, NULL, read_data, con2);        
+        //     if (error != 0) {
+        // 	    fprintf(stderr, "sigmask: %s\n", strerror(error));
+        // 	    exit(EXIT_FAILURE);
+        //     }
+        //     pthread_detach(tid);
+        //     printf("**threads made and detached\n");
+        // }
+        // pthread_mutex_unlock(&queue.lock);
+        // printf("queue unlocked\n");
     }
 
     puts("Shutting down");

@@ -1,12 +1,16 @@
 #include "game.h"
 
+/**
+ * Initialize a game structure
+*/
 int game_init(Game *game)
 {
-    for (int x = 0; x < 3; x++){
-        for (int y = 0; y < 3 ; y++) {
-            game->board[x][y] = ".";
-        }
+    game->board = malloc(sizeof(char)*10);
+    for (int i = 0; i < 9; i++){
+        game->board[i] = '.';
     }
+    game->board[9] = "\0";
+
     init_player(&game->player1);
     init_player(&game->player2);
 
@@ -20,18 +24,26 @@ int game_init(Game *game)
     return 0;
 }
 
-int game_destroy(Game *game)
+/**
+ * Destroy a game structure
+*/
+void game_destroy(Game *game)
 {
+    free(game->board);
+
     destroy_player(&game->player1);
     destroy_player(&game->player2);
 
     pthread_mutex_destroy(&game->lock);
     pthread_cond_destroy(&game->read_ready);
     pthread_cond_destroy(&game->write_ready);
-
-    return 0;
 }
 
+/**
+ * initialize a player
+ * return -1 on error
+ * return 1 on success
+*/
 int init_player(Player *player) {
     player->connection = malloc(sizeof(ConnectionData));
     if (player->connection == NULL) {
@@ -50,9 +62,25 @@ int init_player(Player *player) {
 
     player->role = malloc(sizeof(char*));
     if (player->role == NULL) {
-        free(player->role);
+        free(player->connection);
+        free(player->name);
         perror("player role malloc error:");
         return -1;
     }
     player->role = NULL;
+    return 1;
+}
+
+/**
+ * destroy a player structure
+*/
+void destroy_player(Player *player) {
+    free(player->connection);
+    free(player->name);
+    free(player->role);
+
+    
+    pthread_mutex_destroy(&player->lock);
+    pthread_cond_destroy(&player->read_ready);
+    pthread_cond_destroy(&player->write_ready);
 }
