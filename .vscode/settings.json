@@ -3,6 +3,7 @@
         "ttts.h": "c",
         "socket.h": "c",
         "unistd.h": "c",
-        "connection.h": "c"
+        "connection.h": "c",
+        "queue.h": "c"
     }
 }

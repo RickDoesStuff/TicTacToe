@@ -20,6 +20,8 @@ int main(int argc, char **argv)
     sock = connect_inet(argv[1], argv[2]);
     if (sock < 0) exit(EXIT_FAILURE);
 
+    printf("Connected to %s:%s\n", argv[1], argv[2]);
+
     while ((bytes = read(STDIN_FILENO, buf, BUFLEN)) > 0) {
 	printf("%d bytes read\n", bytes);
 

@@ -1,7 +1,7 @@
 #ifndef _QUEUE_H
 #define _QUEUE_H
 
-#include "connection.h"
+#include "network.h"
 
 typedef struct {
     unsigned size;    // Capacity of the queue
