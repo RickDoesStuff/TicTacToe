@@ -12,8 +12,8 @@ TARGET_SERVER=server
 TARGET_CLIENT=client
 
 # List of source files
-SOURCES_SERVER=ttts.c network.c
-SOURCES_CLIENT=xmit.c network.c
+SOURCES_SERVER=ttts.c network.c connection.c queue.c game.c
+SOURCES_CLIENT=xmit.c network.c connection.c queue.c game.c
 
 # Object files to generate
 OBJECTS_SERVER=$(SOURCES_SERVER:.c=.o)
@@ -58,3 +58,6 @@ CleanClient:
 network.o: network.c network.h
 ttts.o: ttts.c ttts.h
 xmit.o: xmit.c xmit.h
+game.o: game.c game.h
+connection.o: connection.c connection.h
+queue.o: queue.c queue.h

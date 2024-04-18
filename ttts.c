@@ -1,8 +1,15 @@
 // NOTE: must use option -pthread when compiling!
 #define _POSIX_C_SOURCE 200809L
 #include "ttts.h"
+#include "network.h"
+#include "connection.h"
+#include "queue.h"
 
 #define QUEUE_SIZE 8
+
+#define QUEUE_SIZE 8
+#define MAX_CONNECTIONS 2
+
 
 volatile int active = 1;
 
@@ -29,19 +36,15 @@ void install_handlers(sigset_t *mask)
     sigaddset(mask, SIGTERM);
 }
 
-// data to be sent to worker threads
-struct connection_data {
-	struct sockaddr_storage addr;
-	socklen_t addr_len;
-	int fd;
-};
+
 
 #define BUFSIZE 256
 #define HOSTSIZE 100
 #define PORTSIZE 10
 void *read_data(void *arg)
 {
-	struct connection_data *con = arg;
+
+	ConnectionData *con = arg;
     char buf[BUFSIZE + 1], host[HOSTSIZE], port[PORTSIZE];
     int bytes, error;
 
@@ -81,60 +84,78 @@ void *read_data(void *arg)
 int main(int argc, char **argv)
 {
     sigset_t mask;
-    struct connection_data *con;
-    int error;
+    ConnectionData *con;
     pthread_t tid;
-
     char *service = argc == 2 ? argv[1] : "15000";
+    install_handlers(&mask);
 
-	install_handlers(&mask);
-	
+    queue_t queue;
+    if (q_init(&queue, 10) == -1) {
+        return -1;
+    }
+
     int listener = open_listener(service, QUEUE_SIZE);
     if (listener < 0) exit(EXIT_FAILURE);
     
     printf("Listening for incoming connections on %s\n", service);
 
     while (active) {
-    	con = (struct connection_data *)malloc(sizeof(struct connection_data));
-    	con->addr_len = sizeof(struct sockaddr_storage);
-    
-        con->fd = accept(listener, 
-            (struct sockaddr *)&con->addr,
-            &con->addr_len);
+        con = (ConnectionData *)malloc(sizeof(ConnectionData));
+        con->addr_len = sizeof(struct sockaddr_storage);
+
+        con->fd = accept(listener, (struct sockaddr *)&con->addr, &con->addr_len);
         
         if (con->fd < 0) {
             perror("accept");
             free(con);
-            // TODO check for specific error conditions
             continue;
         }
+
+        printf("Waiting in the queue for a second connection\n");
+
+        q_enqueue(&queue, con);
+
+        printf("en queued\n");
+
+        // Handle the connections when there are exactly two
         
-        // temporarily disable signals
-        // (the worker thread will inherit this mask, ensuring that SIGINT is
-        // only delivered to this thread)
-        error = pthread_sigmask(SIG_BLOCK, &mask, NULL);
-        if (error != 0) {
-        	fprintf(stderr, "sigmask: %s\n", strerror(error));
-        	exit(EXIT_FAILURE);
+        printf("queue locked\n");
+        pthread_mutex_lock(&queue.lock);
+        if (queue.length >= MAX_CONNECTIONS) {
+            printf("**length >= max connections\n");
+
+
+            ConnectionData *con1, *con2;
+            printf("dequeuing 1\n");
+            q_dequeue(&queue, &con1);
+            printf("dequeuing 2\n");
+            q_dequeue(&queue, &con2);
+            printf("all dequeued\n");
+
+            // Signal handling should be done here before the threads start
+            int error = pthread_sigmask(SIG_BLOCK, &mask, NULL);
+            if (error != 0) {
+                fprintf(stderr, "sigmask: %s\n", strerror(error));
+                exit(EXIT_FAILURE);
+            }
+
+            printf("before creating\n");
+            error = pthread_create(&tid, NULL, read_data, con1);        
+            if (error != 0) {
+                fprintf(stderr, "sigmask: %s\n", strerror(error));
+                exit(EXIT_FAILURE);
+            }
+            pthread_detach(tid);
+            pthread_create(&tid, NULL, read_data, con2);        
+            if (error != 0) {
+        	    fprintf(stderr, "sigmask: %s\n", strerror(error));
+        	    exit(EXIT_FAILURE);
+            }
+            pthread_detach(tid);
+            printf("**threads made and detached\n");
         }
-        
-        error = pthread_create(&tid, NULL, read_data, con);
-        if (error != 0) {
-        	fprintf(stderr, "pthread_create: %s\n", strerror(error));
-        	close(con->fd);
-        	free(con);
-        	continue;
-        }
-        
-        // automatically clean up child threads once they terminate
-        pthread_detach(tid);
-        
-        // unblock handled signals
-        error = pthread_sigmask(SIG_UNBLOCK, &mask, NULL);
-        if (error != 0) {
-        	fprintf(stderr, "sigmask: %s\n", strerror(error));
-        	exit(EXIT_FAILURE);
-        }
+        pthread_mutex_unlock(&queue.lock);
+        printf("queue unlocked\n");
     }
 
     puts("Shutting down");
