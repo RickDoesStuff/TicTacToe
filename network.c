@@ -98,3 +98,9 @@ int open_listener(char *service, int queue_size)
 
     return sock;
 }
+
+
+int init_ConnectionData(ConnectionData *con) {
+    //con->addr = malloc()
+    return 1;
+}

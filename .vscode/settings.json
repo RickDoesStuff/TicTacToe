@@ -4,6 +4,7 @@
         "socket.h": "c",
         "unistd.h": "c",
         "connection.h": "c",
-        "queue.h": "c"
+        "queue.h": "c",
+        "network.h": "c"
     }
 }

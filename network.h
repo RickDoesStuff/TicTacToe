@@ -11,6 +11,8 @@ typedef struct ConnectionData {
 	int fd;
 } ConnectionData;
 
+int init_ConnectionData (ConnectionData *con);
+
 int connect_inet(char *host, char *service);
 int open_listener(char *service, int queue_size);
 #endif

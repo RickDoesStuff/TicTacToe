@@ -9,7 +9,7 @@ int game_init(Game *game)
     for (int i = 0; i < 9; i++){
         game->board[i] = '.';
     }
-    game->board[9] = "\0";
+    game->board[9] = '\0';
 
     init_player(&game->player1);
     init_player(&game->player2);
@@ -83,4 +83,13 @@ void destroy_player(Player *player) {
     pthread_mutex_destroy(&player->lock);
     pthread_cond_destroy(&player->read_ready);
     pthread_cond_destroy(&player->write_ready);
+}
+
+int init_games(Games **games, int amt) {
+    for (int i = 0 ; i < amt ; i++){
+        if(init_game(games[i])){
+            return -1;
+        }
+    }
+    return 1;
 }
