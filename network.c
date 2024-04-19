@@ -7,6 +7,9 @@
 #include <string.h>
 #include "network.h"
 
+/**
+ * return -1 on error
+*/
 int connect_inet(char *host, char *service)
 {
     struct addrinfo hints, *info_list, *info;
@@ -23,6 +26,7 @@ int connect_inet(char *host, char *service)
         return -1;
     }
 
+    // finds a valid socket, if there is a valid socket it breaks from the loop
     for (info = info_list; info != NULL; info = info->ai_next) {
         sock = socket(info->ai_family, info->ai_socktype, info->ai_protocol);
         if (sock < 0) continue;

@@ -5,6 +5,7 @@
         "unistd.h": "c",
         "connection.h": "c",
         "queue.h": "c",
-        "network.h": "c"
+        "network.h": "c",
+        "game.h": "c"
     }
 }

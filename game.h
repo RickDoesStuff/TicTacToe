@@ -75,7 +75,7 @@ void destroy_player(Player *player);
 /**
  * initialize a game
 */
-int init_game(Game **games);
+int init_game(Game *game);
 
 /**
  * Destroy a game
@@ -88,11 +88,16 @@ void destroy_game(Game *game);
  * return 1 on success
  * return -1 on failure
 */
-int init_games(Games **games, int amt);
+int init_games(Games *games, int amt);
 
 /**
  * Destroy a game
 */
-void destroy_games(Games **games);
+void destroy_games(Games *games);
+
+/**
+ * Start a game
+*/
+void *startGame(void *arg);
 
 #endif

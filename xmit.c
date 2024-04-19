@@ -2,7 +2,6 @@
 
 #include "xmit.h"
 
-
 #define BUFLEN 256
 
 int main(int argc, char **argv)
@@ -12,27 +11,40 @@ int main(int argc, char **argv)
 
     signal(SIGPIPE, SIG_IGN);
 
-    if (argc != 3) {
-	printf("Specify host and service\n");
-	exit(EXIT_FAILURE);
+    if (argc != 3)
+    {
+        printf("Specify host and service\n");
+        exit(EXIT_FAILURE);
     }
 
     sock = connect_inet(argv[1], argv[2]);
-    if (sock < 0) exit(EXIT_FAILURE);
+    if (sock < 0) {
+        exit(EXIT_FAILURE);
+    }
 
     printf("Connected to %s:%s\n", argv[1], argv[2]);
 
-    while ((bytes = read(STDIN_FILENO, buf, BUFLEN)) > 0) {
-	printf("%d bytes read\n", bytes);
+    char protocol = "WAIT";
 
-	sent = write(sock, buf, bytes);
-	printf("%d bytes sent\n", sent);
-	if (sent == -1) {
-	    perror("write");
-	    break;
-	} else if (sent < bytes) {
-	    printf("Only %d bytes sent\n", sent);
-	}
+    while ((bytes = read(STDIN_FILENO, buf, BUFLEN)) > 0)
+    {
+        if (strcmp(protocol,"WAIT")) {
+            printf("waiting\n");
+        }
+
+        printf("%d bytes read\n", bytes);
+
+        sent = write(sock, buf, bytes);
+        printf("%d bytes sent\n", sent);
+        if (sent == -1)
+        {
+            perror("write");
+            break;
+        }
+        else if (sent < bytes)
+        {
+            printf("Only %d bytes sent\n", sent);
+        }
     }
 
     close(sock);

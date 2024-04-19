@@ -83,10 +83,6 @@ void *read_data(void *arg)
     return NULL;
 }
 
-void *startGame(void *arg)
-{
-
-}
 
 int main(int argc, char **argv)
 {
@@ -122,7 +118,14 @@ int main(int argc, char **argv)
             // TODO check for specific error conditions
             continue;
         }
+        // connection sucessful
 
+        // send wait to client
+        int bytesWritten;
+        if((bytesWritten = write(con->fd,"wait", 4) != 4)) {
+            printf("Error Sending Wait : Bytes Written: %i\n", bytesWritten);
+            return -1;
+        }
 
         // create a game if there isnt one
 
@@ -157,6 +160,7 @@ int main(int argc, char **argv)
         if (q_enqueue(&queue, &con) == -1) {
             return -1;
         } 
+        printf("eunqueued: total in queue: %i\n ", queue.length);
 
         pthread_mutex_lock(&queue.lock);
 
@@ -184,12 +188,8 @@ int main(int argc, char **argv)
 
 
             pthread_mutex_lock(&games.lock);
-            // if (games.active < games.size) {
-            //     if (init_game(&game) == -1) {
-            //         return -1;
-            //     }
-            // }
 
+            // might need to make another game here if there is not enough in Games.size
             
             // create a thread to run the game on
             error = pthread_create(&tid, NULL, startGame, &games.games[games.active]);
@@ -199,6 +199,7 @@ int main(int argc, char **argv)
             }
             pthread_detach(tid);
             games.active++;
+            pthread_mutex_unlock(&games.lock);
 
         }
         pthread_mutex_unlock(&queue.lock);

@@ -1,5 +1,25 @@
 #include "game.h"
 
+
+
+/**
+ * Start a game
+*/
+void *startGame(void *arg)
+{
+    Game *game = (Game*)(arg);
+    
+    write(game->player1.connection->fd, "game started", 12);
+    write(game->player2.connection->fd, "game started", 12);
+}
+
+
+
+
+
+
+
+
 /**
  * Initialize a game structure
 */
@@ -85,9 +105,9 @@ void destroy_player(Player *player) {
     pthread_cond_destroy(&player->write_ready);
 }
 
-int init_games(Games **games, int amt) {
+int init_games(Games *games, int amt) {
     for (int i = 0 ; i < amt ; i++){
-        if(init_game(games[i])){
+        if(init_game(&games->games[i])){
             return -1;
         }
     }
