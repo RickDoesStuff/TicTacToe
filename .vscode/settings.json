@@ -6,6 +6,7 @@
         "connection.h": "c",
         "queue.h": "c",
         "network.h": "c",
-        "game.h": "c"
+        "game.h": "c",
+        "stdio.h": "c"
     }
 }

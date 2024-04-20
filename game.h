@@ -2,6 +2,7 @@
 #define _GAME_H
 
 #include <stdio.h>
+#include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <pthread.h>
@@ -27,8 +28,8 @@ typedef struct Player{
 } Player;
 
 /**
- * Player player1
- * Player player2
+ * Player *player1
+ * Player *player2
  * int turn
  * int currentMove
  * char *board
@@ -38,8 +39,8 @@ typedef struct Player{
  * pthread_cond_t write_ready
 */
 typedef struct Game{
-    Player player1;
-    Player player2;
+    Player *player1;
+    Player *player2;
     int turn;
     int currentMove;
     char *board;
@@ -73,7 +74,8 @@ int init_player(Player *player);
 void destroy_player(Player *player);
 
 /**
- * initialize a game
+ * Initialize a game structure
+ * return 1 on sucess 
 */
 int init_game(Game *game);
 
